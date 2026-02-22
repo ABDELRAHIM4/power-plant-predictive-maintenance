@@ -31,11 +31,6 @@ df['failure_in_24h'] = df['failure'].shift(-24).fillna(0)
 
 df = df.dropna()
 
-
-
-# prepare for predictions
-
-
 features = [col for col in df.columns if col not in ['failure_in_24h', 'failure', 'high_CO', 'high_NOX', 'high_TIT']]
 X = df[features]
 y = df['failure_in_24h']
@@ -79,7 +74,40 @@ else:
 
 # ============================================
 
-import matplotlib.pyplot as plt
+
+
+
+total_hours = len(df)
+years = total_hours / 8760   
+failures_per_year = failure_count / years
+
+recall_value = 0.78   
+
+prevented_per_year = failures_per_year * recall_value
+
+planned_cost = 380000
+unplanned_cost = 3980000
+outage_days = 7
+plant_size = 300
+electricity_price = 50
+
+revenue_loss = plant_size * 24 * outage_days * electricity_price
+total_unplanned = unplanned_cost + revenue_loss
+savings_per_failure = total_unplanned - planned_cost
+annual_savings = prevented_per_year * savings_per_failure
+
+print("\n💰 FINANCIAL IMPACT (From YOUR data):")
+print(f"   Total hours of data: {total_hours:,}")
+print(f"   Years of data: {years:.1f}")
+print(f"   Total failures in data: {failure_count}")
+print(f"   Failures per year: {failures_per_year:.1f}")
+print(f"   Model Recall: {recall_value:.0%}")
+print(f"   Failures prevented per year: {prevented_per_year:.1f}")
+print(f"   Savings per prevented failure: ${savings_per_failure:,.0f}")
+print(f"   ANNUAL SAVINGS: ${annual_savings:,.0f}")
+
+
+
 import seaborn as sns
 
 # Confusion Matrix
@@ -95,7 +123,7 @@ plt.tight_layout()
 plt.savefig('confusion_matrix.png')
 plt.show()
 
-# Feature Importance
+
 plt.figure(figsize=(10, 6))
 feature_importance = pd.DataFrame({
     'feature': features,
